@@ -15,9 +15,6 @@ const PORT = process.env.PORT;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const MONGO_URI = process.env.MONGO_URI;
 
-// Handle favicon requests
-app.get('/favicon.ico', (req, res) => res.status(204).end());
-
 // Setup CORS
 const allowedOrigins = [FRONTEND_URL];
 app.use(cors({
@@ -35,6 +32,14 @@ app.use(cors({
 
 app.use(express.json());
 
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Handle favicon requests
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
+});
+
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, {
   retryWrites: true,
@@ -46,6 +51,7 @@ mongoose.connect(MONGO_URI, {
 app.get('/', (req, res) => {
   res.status(200).send('Server is running');
 });
+
 // Health check route
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
@@ -87,10 +93,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+// Start server only in development environment
+if (NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
     console.log(`🚀 Server running on ${BACKEND_URL}`);
     console.log(`🩺 Health check: ${BACKEND_URL}/api/health`);
-});
+  });
+}
 
 // Unhandled Promise Rejection
 process.on('unhandledRejection', (err) => {
@@ -104,4 +113,5 @@ process.on('uncaughtException', (err) => {
   if (NODE_ENV === 'production') process.exit(1);
 });
 
+// Export for Vercel serverless
 module.exports = serverless(app);
