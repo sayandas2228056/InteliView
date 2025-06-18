@@ -3,17 +3,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const serverless = require('serverless-http');
 
 // Initialize Express app
 const app = express();
 
 // Load environment variables
-const FRONTEND_URL = process.env.FRONTEND_URL; // e.g., http://localhost:5173
-const BACKEND_URL = process.env.BACKEND_URL;   // e.g., http://localhost:3000
-const PORT = process.env.PORT || 3000;
+const FRONTEND_URL = process.env.FRONTEND_URL;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const MONGO_URI = process.env.MONGO_URI;
+const PORT = process.env.PORT || 3000;
 
 // Setup CORS with simplified origin check
 app.use(cors({
@@ -34,24 +32,23 @@ app.use(express.json());
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Handle favicon requests
-app.get('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
-});
-
-// Connect to MongoDB with timeout
+// Connect to MongoDB with optimized settings
 const connectDB = async () => {
   try {
-    await mongoose.connect(MONGO_URI, {
-      retryWrites: true,
-      w: 'majority',
-      serverSelectionTimeoutMS: 5000, // 5 second timeout
-      socketTimeoutMS: 45000, // 45 second timeout
-    });
-    console.log('✅ MongoDB Connected Successfully');
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(MONGO_URI, {
+        retryWrites: true,
+        w: 'majority',
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        minPoolSize: 0,
+        maxIdleTimeMS: 60000,
+      });
+      console.log('✅ MongoDB Connected Successfully');
+    }
   } catch (err) {
     console.error('❌ MongoDB connection error:', err);
-    // Don't exit process in production as it will crash the serverless function
     if (NODE_ENV === 'development') {
       process.exit(1);
     }
@@ -68,7 +65,12 @@ app.get('/', (req, res) => {
 
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+  res.json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Routes
@@ -107,13 +109,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server only in development environment
-if (NODE_ENV === 'development') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on ${BACKEND_URL || `http://localhost:${PORT}`}`);
-    console.log(`🩺 Health check: ${BACKEND_URL || `http://localhost:${PORT}`}/api/health`);
-  });
-}
-
-// Export for Vercel serverless
-module.exports = serverless(app);
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🩺 Health check: http://localhost:${PORT}/api/health`);
+});

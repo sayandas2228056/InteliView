@@ -1,17 +1,17 @@
 {
-  "name": "resume-ats-checker-backend",
+  "name": "inteliview-backend",
   "version": "1.0.0",
-  "description": "Backend server for Resume ATS Checker application deployed on Vercel",
+  "description": "Backend server for InteliView application deployed on Render",
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js"
   },
   "keywords": [
     "express",
-    "vercel",
-    "serverless",
+    "node",
     "resume",
-    "ats"
+    "ats",
+    "interview"
   ],
   "author": "Sayan Das",
   "license": "ISC",
@@ -26,10 +26,12 @@
     "mongoose": "^8.15.1",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^7.0.3",
-    "pdf-parse": "^1.1.1",
-    "serverless-http": "^3.2.0"
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
