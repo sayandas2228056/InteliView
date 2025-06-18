@@ -15,19 +15,18 @@ const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const MONGO_URI = process.env.MONGO_URI;
 
-// Setup CORS
-const allowedOrigins = [FRONTEND_URL];
+// Setup CORS with simplified origin check
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
+    if (!origin || origin === FRONTEND_URL) {
+      callback(null, true);
     } else {
-      return callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
@@ -40,13 +39,27 @@ app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
 });
 
-// Connect to MongoDB
-mongoose.connect(MONGO_URI, {
-  retryWrites: true,
-  w: 'majority'
-})
-  .then(() => console.log('✅ MongoDB Connected Successfully'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+// Connect to MongoDB with timeout
+const connectDB = async () => {
+  try {
+    await mongoose.connect(MONGO_URI, {
+      retryWrites: true,
+      w: 'majority',
+      serverSelectionTimeoutMS: 5000, // 5 second timeout
+      socketTimeoutMS: 45000, // 45 second timeout
+    });
+    console.log('✅ MongoDB Connected Successfully');
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err);
+    // Don't exit process in production as it will crash the serverless function
+    if (NODE_ENV === 'development') {
+      process.exit(1);
+    }
+  }
+};
+
+// Initialize DB connection
+connectDB();
 
 // API Routes
 app.get('/', (req, res) => {
@@ -101,18 +114,6 @@ if (NODE_ENV === 'development') {
     console.log(`🩺 Health check: ${BACKEND_URL || `http://localhost:${PORT}`}/api/health`);
   });
 }
-
-// Unhandled Promise Rejection
-process.on('unhandledRejection', (err) => {
-  console.error('❗ Unhandled Promise Rejection:', err);
-  if (NODE_ENV === 'production') process.exit(1);
-});
-
-// Uncaught Exception
-process.on('uncaughtException', (err) => {
-  console.error('❗ Uncaught Exception:', err);
-  if (NODE_ENV === 'production') process.exit(1);
-});
 
 // Export for Vercel serverless
 module.exports = serverless(app);
