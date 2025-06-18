@@ -20,8 +20,15 @@ const app = express();
 // Handle favicon requests
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [FRONTEND_URL],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Connect to MongoDB
@@ -29,6 +36,10 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB Connected Successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+
+app.get('/', (req, res) => {
+  res.status(200).send('Server is running');
+});
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
