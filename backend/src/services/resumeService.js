@@ -1,6 +1,5 @@
 const pdf = require('pdf-parse');
 const mammoth = require('mammoth');
-const fs = require('fs');
 const config = require('../config/config');
 const axios = require('axios');
 
@@ -10,10 +9,9 @@ if (!config.TOGETHER_API_KEY) {
   throw new Error('Together AI API key is not configured');
 }
 
-async function extractTextFromPDF(filePath) {
+async function extractTextFromPDF(buffer) {
   try {
-    const dataBuffer = fs.readFileSync(filePath);
-    const data = await pdf(dataBuffer);
+    const data = await pdf(buffer);
     return data.text;
   } catch (error) {
     console.error('PDF extraction error:', error);
@@ -21,9 +19,9 @@ async function extractTextFromPDF(filePath) {
   }
 }
 
-async function extractTextFromDOCX(filePath) {
+async function extractTextFromDOCX(buffer) {
   try {
-    const result = await mammoth.extractRawText({ path: filePath });
+    const result = await mammoth.extractRawText({ buffer });
     return result.value;
   } catch (error) {
     console.error('DOCX extraction error:', error);
@@ -32,22 +30,18 @@ async function extractTextFromDOCX(filePath) {
 }
 
 async function extractTextFromFile(file) {
-  const filePath = file.path;
   const fileType = file.mimetype;
 
   try {
     if (fileType === 'application/pdf') {
-      return await extractTextFromPDF(filePath);
+      return await extractTextFromPDF(file.buffer);
     } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-      return await extractTextFromDOCX(filePath);
+      return await extractTextFromDOCX(file.buffer);
     } else {
       throw new Error('Unsupported file format');
     }
-  } finally {
-    // Clean up the temporary file
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+  } catch (error) {
+    throw new Error('Failed to extract text: ' + error.message);
   }
 }
 
