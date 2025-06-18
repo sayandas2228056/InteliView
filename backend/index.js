@@ -92,7 +92,7 @@ app.use((err, req, res, next) => {
     error: NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
 });
-
+{/* 
 // Start server only in development environment
 if (NODE_ENV !== 'production') {
   app.listen(PORT, () => {
@@ -100,7 +100,7 @@ if (NODE_ENV !== 'production') {
     console.log(`🩺 Health check: ${BACKEND_URL}/api/health`);
   });
 }
-
+*/}
 // Unhandled Promise Rejection
 process.on('unhandledRejection', (err) => {
   console.error('❗ Unhandled Promise Rejection:', err);
