@@ -28,7 +28,6 @@ module.exports = {
   PORT: process.env.PORT || 3000,
   NODE_ENV: process.env.NODE_ENV || 'development',
   DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
-  UPLOAD_DIR: 'uploads/',
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
   ALLOWED_FILE_TYPES: [
     'application/pdf',

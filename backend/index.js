@@ -3,7 +3,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const serverless = require('serverless-http');
 
 // Initialize Express app
@@ -32,13 +31,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
-// Ensure 'uploads' directory exists
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
-app.use('/uploads', express.static(uploadsDir));
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI)
@@ -93,7 +85,6 @@ app.listen(PORT, () => {
     console.log(`🚀 Server running on ${BACKEND_URL}`);
     console.log(`🩺 Health check: ${BACKEND_URL}/api/health`);
 });
-
 
 // Unhandled Promise Rejection
 process.on('unhandledRejection', (err) => {
