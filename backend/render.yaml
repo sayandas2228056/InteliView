@@ -10,6 +10,6 @@ services:
       - key: MONGO_URI
         sync: false
       - key: FRONTEND_URL
-        sync: false
-    healthCheckPath: /api/health
-    autoDeploy: true 
+        value: https://inteli-view.vercel.app
+      - key: PORT
+        value: 3000 

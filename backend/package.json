@@ -2,9 +2,11 @@
   "name": "inteliview-backend",
   "version": "1.0.0",
   "description": "Backend server for InteliView application deployed on Render",
+  "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "echo 'No build step required'"
   },
   "keywords": [
     "express",

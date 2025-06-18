@@ -3,6 +3,7 @@ const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { extractTextFromFile, analyzeResumeWithTogetherAI } = require('../services/resumeService');
+const fs = require('fs');
 
 // Resume analysis endpoint
 router.post('/analyze', authenticateToken, upload.single('resume'), async (req, res) => {
@@ -52,6 +53,12 @@ router.post('/analyze', authenticateToken, upload.single('resume'), async (req, 
     res.json(analysisResult);
   } catch (error) {
     console.error('Resume analysis error:', error);
+    
+    // Clean up file if it still exists
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
     res.status(500).json({ 
       message: error.message || 'Failed to analyze resume' 
     });

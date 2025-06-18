@@ -4,97 +4,90 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 
-// Initialize Express app
+// Import routes
+const authRoutes = require('./src/routes/auth');
+const interviewRoutes = require('./src/routes/interview');
+const resumeRoutes = require('./src/routes/resumeRoutes');
+const profileRoutes = require('./src/routes/profile');
+const feedbackRoutes = require('./src/routes/feedback');
+const interviewPrepRoutes = require('./src/routes/interviewPrep');
+const mockTestRoutes = require('./src/routes/mockTest');
+
 const app = express();
 
-// Load environment variables
-const FRONTEND_URL = process.env.FRONTEND_URL;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const MONGO_URI = process.env.MONGO_URI;
-const PORT = process.env.PORT || 3000;
-
-// Setup CORS with simplified origin check
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || origin === FRONTEND_URL) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
+// CORS configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'https://inteli-view.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
 
+// Middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Create uploads directory if it doesn't exist
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
 
-// Connect to MongoDB with optimized settings
-const connectDB = async () => {
+// Serve static files from uploads directory
+app.use('/uploads', express.static(uploadsDir));
+
+// Connect to MongoDB with retry logic
+const connectWithRetry = async () => {
   try {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(MONGO_URI, {
-        retryWrites: true,
-        w: 'majority',
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-        maxPoolSize: 10,
-        minPoolSize: 0,
-        maxIdleTimeMS: 60000,
-      });
-      console.log('✅ MongoDB Connected Successfully');
-    }
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('MongoDB Connected Successfully');
   } catch (err) {
-    console.error('❌ MongoDB connection error:', err);
-    if (NODE_ENV === 'development') {
-      process.exit(1);
-    }
+    console.error('MongoDB connection error:', err);
+    console.log('Retrying connection in 5 seconds...');
+    setTimeout(connectWithRetry, 5000);
   }
 };
 
-// Initialize DB connection
-connectDB();
+connectWithRetry();
 
-// API Routes
-app.get('/', (req, res) => {
-  res.status(200).send('Server is running');
-});
-
-// Health check route
+// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     message: 'Server is running',
-    environment: NODE_ENV,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
   });
 });
 
-// Routes
-app.use('/api/auth', require('./src/routes/auth'));
-app.use('/api/profile', require('./src/routes/profile'));
-app.use('/api/interview', require('./src/routes/interview'));
-app.use('/api/feedback', require('./src/routes/feedback'));
-app.use('/api/resume', require('./src/routes/resumeRoutes'));
-app.use('/api/interview-prep', require('./src/routes/interviewPrep'));
-app.use('/api/mock-test', require('./src/routes/mockTest'));
+app.get('/',(req,res)=>{
+  res.status(200).send("Server is running")
+})
 
-// 404 Handler
-app.use((req, res) => {
+// Register routes
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/interview', interviewRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/resume', resumeRoutes);
+app.use('/api/interview-prep', interviewPrepRoutes);
+app.use('/api/mock-test', mockTestRoutes);
+
+// 404 handler for undefined routes
+app.use((req, res, next) => {
   console.log(`404 - Route not found: ${req.method} ${req.url}`);
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.url}`
+  res.status(404).json({ 
+    success: false, 
+    message: `Route not found: ${req.method} ${req.url}` 
   });
 });
 
-// Global Error Handler
+// Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('🔥 Error:', err);
-
+  console.error('Error:', err);
+  
+  // Handle multer errors
   if (err.name === 'MulterError') {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ message: 'File size should be less than 5MB' });
@@ -102,15 +95,45 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ message: err.message });
   }
 
-  res.status(500).json({
+  // Handle CORS errors
+  if (err.message.includes('CORS')) {
+    return res.status(403).json({
+      success: false,
+      message: 'CORS error: ' + err.message
+    });
+  }
+
+  // Handle other errors
+  res.status(500).json({ 
     success: false,
     message: 'Something went wrong!',
-    error: NODE_ENV === 'development' ? err.message : 'Internal server error'
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
 });
 
-// Start server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🩺 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/api/health`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
 });
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Promise Rejection:', err);
+  // Don't exit the process in development
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  // Don't exit the process in development
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+});
+
+module.exports = app;
