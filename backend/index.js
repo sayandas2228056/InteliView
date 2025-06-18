@@ -15,6 +15,9 @@ const PORT = process.env.PORT;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const MONGO_URI = process.env.MONGO_URI;
 
+// Handle favicon requests
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // Setup CORS
 const allowedOrigins = [FRONTEND_URL];
 app.use(cors({

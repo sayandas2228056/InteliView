@@ -17,6 +17,9 @@ const mockTestRoutes = require('./routes/mockTest');
 
 const app = express();
 
+// Handle favicon requests
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // Middleware
 app.use(cors());
 app.use(express.json());
