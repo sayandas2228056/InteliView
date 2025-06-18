@@ -11,7 +11,7 @@ const app = express();
 // Load environment variables
 const FRONTEND_URL = process.env.FRONTEND_URL; // e.g., http://localhost:5173
 const BACKEND_URL = process.env.BACKEND_URL;   // e.g., http://localhost:3000
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -48,6 +48,7 @@ mongoose.connect(MONGO_URI, {
   .then(() => console.log('✅ MongoDB Connected Successfully'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
+// API Routes
 app.get('/', (req, res) => {
   res.status(200).send('Server is running');
 });
@@ -92,15 +93,15 @@ app.use((err, req, res, next) => {
     error: NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
 });
-{/* 
+
 // Start server only in development environment
-if (NODE_ENV !== 'production') {
+if (NODE_ENV === 'development') {
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on ${BACKEND_URL}`);
-    console.log(`🩺 Health check: ${BACKEND_URL}/api/health`);
+    console.log(`🚀 Server running on ${BACKEND_URL || `http://localhost:${PORT}`}`);
+    console.log(`🩺 Health check: ${BACKEND_URL || `http://localhost:${PORT}`}/api/health`);
   });
 }
-*/}
+
 // Unhandled Promise Rejection
 process.on('unhandledRejection', (err) => {
   console.error('❗ Unhandled Promise Rejection:', err);
