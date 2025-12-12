@@ -8,7 +8,7 @@ const About = () => {
           About <span className="text-orange-500">InteliView</span>
         </h1>
         <p className="text-lg md:text-xl text-gray-300 mb-12 text-center">
-          InteliView is an AI-powered interview preparation platform built to help job seekers master the art of technical interviews.
+          InteliView is an AI-powered Placments preparation platform built to help job seekers master the art of technical interviews.
           From real-time mock interviews to advanced resume analysis, we provide everything you need to succeed.
         </p>
 
@@ -16,18 +16,19 @@ const About = () => {
           <div>
             <h2 className="text-2xl font-semibold text-orange-400 mb-4">🎯 Our Mission</h2>
             <p className="text-gray-400">
-              To democratize access to high-quality interview preparation tools using artificial intelligence,
+              To democratize access to high-quality placement preparation tools using artificial intelligence,
               empowering individuals to crack their dream jobs with confidence and skill.
             </p>
           </div>
           <div>
             <h2 className="text-2xl font-semibold text-orange-400 mb-4">⚙️ What We Offer</h2>
             <ul className="list-disc pl-5 text-gray-400">
-              <li>AI-driven mock interviews with adaptive feedback</li>
               <li>Real-time resume analysis and ATS optimization</li>
               <li>Curated preparation modules with progress tracking</li>
               <li>Dashboard to monitor performance and growth</li>
               <li>Secure authentication and personalized experience</li>
+              <li>AI-powered mock mcq based test</li>
+              <li>AI-powered interview suggestions</li>
             </ul>
           </div>
         </div>

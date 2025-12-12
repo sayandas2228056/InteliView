@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 const Contact = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
+    <div className="min-h-screen bg-linear-to-br from-black via-gray-800 to-black">
       
 
       

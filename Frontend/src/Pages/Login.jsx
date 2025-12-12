@@ -94,7 +94,7 @@ const Login = () => {
                 InteliView
               </h1>
             </a>
-            <h2 className="text-4xl font-black mb-4 bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+            <h2 className="text-4xl font-black mb-4 bg-linear-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
               Welcome Back
             </h2>
             <p className="text-white">Sign in to continue your interview preparation</p>
